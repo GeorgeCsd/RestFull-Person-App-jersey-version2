@@ -1,3 +1,4 @@
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.sql.*;
@@ -52,12 +53,13 @@ public class PersonDB {
 
     @GET
     @Path("/{id}/get")
-    public static Person getPerson(@PathParam("id")int id) throws ClassNotFoundException {
+    public static Object getPerson(@PathParam("id")int id) throws ClassNotFoundException {
         Person p = null;
         Statement stmt = null;
         Connection con = null;
         PreparedStatement pstmt;
         ResultSet res;
+        Response response = new Response();
         int i=0;
         try {
 
@@ -78,7 +80,9 @@ public class PersonDB {
 
 
             } else {
-                System.out.println("Person with Person name "  + "was not found");
+                response.setStatus(false);
+                response.setMessage("Person with id "+id+ " don't exists");
+                return response;
             }
         } catch (SQLException ex) {
             // Log exception
@@ -159,6 +163,44 @@ public class PersonDB {
                 pstmt.executeUpdate();
                 response.setStatus(true);
                 response.setMessage("Person was deleted successfully");
+            }
+
+        } catch (SQLException ex) {
+            // Log exception
+            Logger.getLogger(PersonDB.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            // close connection
+            closeDBConnection(stmt, con);
+            return response;
+        }
+    }
+    @PUT
+    @Path("/{id}/update")
+    public static Response updatePerson(@PathParam("id")int id,Person p) throws ClassNotFoundException {
+        Statement stmt = null;
+        Connection con = null;
+        PreparedStatement pstmt;
+        ResultSet res;
+        Response response = new Response();
+        try {
+
+            con = DbConnection.getConnection();
+            stmt = con.createStatement();
+            pstmt = con.prepareStatement(
+                    "SELECT ID FROM persontbl WHERE ID=" + id);
+            res=pstmt.executeQuery();
+            if(res.next()==false){
+                response.setStatus(false);
+                response.setMessage("Person Don't Exists");
+            }
+            else{
+                pstmt = con.prepareStatement(
+                        "UPDATE persontbl SET Name=?,Age=? WHERE ID=" + id);
+                pstmt.setString(1,p.getName());
+                pstmt.setInt(2,p.getAge());
+                pstmt.executeUpdate();
+                response.setStatus(true);
+                response.setMessage("Person was updated successfully");
             }
 
         } catch (SQLException ex) {

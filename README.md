@@ -8,7 +8,7 @@ A simple Java EE7(JAX-RS)application that:
 
 -delete data from db
 
-(We connect with tha database using Driving Manager class)
+(We connect with the database using Driving Manager class)
 
 
 
